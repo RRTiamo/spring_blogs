@@ -1,0 +1,43 @@
+/* 0. 生活档案馆 (Personal Life Archive) */
+.style-life {
+  --font-heading: var(--font-jost);
+  --font-body: var(--font-inter);
+  --accent-color: #D9865F;
+  --accent-light-color: #F1B894;
+  --bg-color: #F7F8F1;
+  --bg-dark-color: #EAF0E5;
+  --fg-color: #223326;
+  --border-line-color: rgba(34, 51, 38, 0.1);
+
+  --font-hero-heading: var(--font-jost);
+  --font-hero-body: var(--font-inter);
+  --font-writing-heading: var(--font-jost);
+  --font-writing-body: var(--font-inter);
+  --font-bento-heading: var(--font-space-grotesk);
+  --font-bento-body: var(--font-inter);
+  --font-gallery-heading: var(--font-jost);
+  --font-gallery-body: var(--font-inter);
+  --font-quote-heading: var(--font-jost);
+
+  --font-hero-h-val: var(--font-hero-heading), var(--font-noto-serif-sc), system-ui, sans-serif;
+  --font-hero-b-val: var(--font-hero-body), var(--font-body), sans-serif;
+  --font-writing-h-val: var(--font-writing-heading), var(--font-noto-serif-sc), system-ui, sans-serif;
+  --font-writing-b-val: var(--font-writing-body), var(--font-body), sans-serif;
+  --font-bento-h-val: var(--font-bento-heading), var(--font-body), sans-serif;
+  --font-bento-b-val: var(--font-bento-body), var(--font-body), sans-serif;
+  --font-gallery-h-val: var(--font-gallery-heading), var(--font-noto-serif-sc), system-ui, sans-serif;
+  --font-gallery-b-val: var(--font-gallery-body), var(--font-body), sans-serif;
+  --font-quote-h-val: var(--font-quote-heading), var(--font-noto-serif-sc), system-ui, sans-serif;
+}
+.dark.style-life {
+  --bg-color: #17211B;
+  --bg-dark-color: #203027;
+  --fg-color: #F1F4EA;
+  --border-line-color: rgba(241, 244, 234, 0.12);
+  --accent-color: #F1A77C;
+  --accent-light-color: #F5C6A8;
+}
+.style-life .high-contrast-card {
+  background-color: color-mix(in srgb, var(--bg-color) 92%, white 8%) !important;
+  border-color: var(--border-line-color) !important;
+}

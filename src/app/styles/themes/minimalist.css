@@ -1,0 +1,67 @@
+/* 2. 极致极简无界卡片 (Minimalist Bento) */
+.style-minimalist {
+  --font-heading: var(--font-inter);
+  --font-body: var(--font-inter);
+  --accent-color: #64748B;
+  --accent-light-color: #94A3B8;
+  --bg-color: #FCFCFC;
+  --bg-dark-color: #F5F5F5;
+  --fg-color: #1E293B;
+  --border-line-color: transparent;
+
+  /* Minimalist font pairing overrides */
+  --font-hero-heading: var(--font-jost);
+  --font-hero-body: var(--font-inter);
+  --font-writing-heading: var(--font-jost);
+  --font-writing-body: var(--font-inter);
+  --font-bento-heading: var(--font-inter);
+  --font-bento-body: var(--font-inter);
+  --font-gallery-heading: var(--font-jost);
+  --font-gallery-body: var(--font-inter);
+  --font-quote-heading: var(--font-jost);
+
+  /* Fallback overrides for Minimalist (pure modern Sans-serif) */
+  --font-hero-h-val: var(--font-hero-heading), system-ui, -apple-system, sans-serif;
+  --font-hero-b-val: var(--font-hero-body), system-ui, -apple-system, sans-serif;
+  --font-writing-h-val: var(--font-writing-heading), system-ui, -apple-system, sans-serif;
+  --font-writing-b-val: var(--font-writing-body), system-ui, -apple-system, sans-serif;
+  --font-bento-h-val: var(--font-bento-heading), system-ui, -apple-system, sans-serif;
+  --font-bento-b-val: var(--font-bento-body), system-ui, -apple-system, sans-serif;
+  --font-gallery-h-val: var(--font-gallery-heading), system-ui, -apple-system, sans-serif;
+  --font-gallery-b-val: var(--font-gallery-body), system-ui, -apple-system, sans-serif;
+  --font-quote-h-val: var(--font-quote-heading), system-ui, -apple-system, sans-serif;
+}
+.dark.style-minimalist {
+  --bg-color: #0F172A;
+  --bg-dark-color: #1E293B;
+  --fg-color: #F1F5F9;
+  --border-line-color: transparent;
+}
+/* 极简模式下消除多余边框、将卡片扁平化 */
+.style-minimalist .border,
+.style-minimalist .border-t,
+.style-minimalist .border-b,
+.style-minimalist .border-l,
+.style-minimalist .border-r {
+  border-color: transparent !important;
+}
+.style-minimalist .rounded-3xl,
+.style-minimalist .rounded-2xl {
+  border-radius: 12px !important;
+}
+.style-minimalist .rounded-xl,
+.style-minimalist .rounded-lg {
+  border-radius: 8px !important;
+}
+.style-minimalist .bg-white\/40,
+.style-minimalist .bg-white\/20,
+.style-minimalist .bg-white {
+  background-color: var(--bg-dark-color) !important;
+  box-shadow: none !important;
+}
+.style-minimalist .fixed.inset-0.z-1 { /* 隐藏视频背景 */
+  opacity: 0 !important;
+}
+.style-minimalist .film-grain { /* 隐藏颗粒感 */
+  display: none !important;
+}

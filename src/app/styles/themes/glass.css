@@ -1,0 +1,80 @@
+/* 3. 赛博拟玻毛玻璃 (Glassmorphism Cyber) */
+.style-glass {
+  --font-heading: var(--font-inter);
+  --font-body: var(--font-inter);
+  --accent-color: #EC4899;
+  --accent-light-color: #F472B6;
+  --bg-color: #0E0C15;
+  --bg-dark-color: #151324;
+  --fg-color: #F8F9FA;
+  --border-line-color: rgba(255, 255, 255, 0.12);
+
+  /* Cyber Glassmorphism pairings (high contrast modern) */
+  --font-hero-heading: var(--font-space-grotesk);
+  --font-hero-body: var(--font-inter);
+  --font-writing-heading: var(--font-space-grotesk);
+  --font-writing-body: var(--font-inter);
+  --font-bento-heading: var(--font-space-mono);
+  --font-bento-body: var(--font-space-mono);
+  --font-gallery-heading: var(--font-space-grotesk);
+  --font-gallery-body: var(--font-inter);
+  --font-quote-heading: var(--font-space-grotesk);
+
+  /* Fallback overrides for Glassmorphism (futuristic Sans-serif) */
+  --font-hero-h-val: var(--font-hero-heading), system-ui, -apple-system, sans-serif;
+  --font-hero-b-val: var(--font-hero-body), system-ui, -apple-system, sans-serif;
+  --font-writing-h-val: var(--font-writing-heading), system-ui, -apple-system, sans-serif;
+  --font-writing-b-val: var(--font-writing-body), system-ui, -apple-system, sans-serif;
+  --font-bento-h-val: var(--font-bento-heading), system-ui, -apple-system, sans-serif;
+  --font-bento-b-val: var(--font-bento-body), monospace;
+  --font-gallery-h-val: var(--font-gallery-heading), system-ui, -apple-system, sans-serif;
+  --font-gallery-b-val: var(--font-gallery-body), system-ui, -apple-system, sans-serif;
+  --font-quote-h-val: var(--font-quote-heading), system-ui, -apple-system, sans-serif;
+}
+.dark.style-glass {
+  --bg-color: #09070F;
+  --bg-dark-color: #110E1C;
+  --fg-color: #F8F9FA;
+  --border-line-color: rgba(255, 255, 255, 0.15);
+}
+/* 强行应用毛玻璃背景 */
+.style-glass body {
+  background-color: var(--bg-color) !important;
+}
+.style-glass .bg-white\/40,
+.style-glass .bg-white\/20,
+.style-glass .bg-white,
+.style-glass .bg-cream\/90,
+.style-glass .bg-cream\/85 {
+  background-color: rgba(255, 255, 255, 0.07) !important;
+  backdrop-filter: blur(18px) saturate(130%) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(130%) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+.dark.style-glass .bg-white\/40,
+.dark.style-glass .bg-white\/20,
+.dark.style-glass .bg-white,
+.dark.style-glass .bg-charcoal\/90,
+.dark.style-glass .bg-charcoal\/85 {
+  background-color: rgba(15, 12, 28, 0.45) !important;
+  backdrop-filter: blur(18px) saturate(130%) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(130%) !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+}
+.style-glass .rounded-3xl {
+  border-radius: 28px !important;
+}
+.style-glass .rounded-2xl {
+  border-radius: 20px !important;
+}
+.style-glass .rounded-xl {
+  border-radius: 12px !important;
+}
+.style-glass .shadow-sm,
+.style-glass .shadow,
+.style-glass .shadow-md,
+.style-glass .shadow-lg,
+.style-glass .shadow-xl,
+.style-glass .shadow-2xl {
+  box-shadow: 0 10px 30px -10px rgba(236, 72, 153, 0.15) !important;
+}

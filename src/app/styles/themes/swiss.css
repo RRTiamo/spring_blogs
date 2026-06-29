@@ -1,0 +1,28 @@
+/* 1. 瑞士现代杂志排版 (Swiss Modernism 2.0) */
+.style-swiss {
+  --font-heading: var(--font-cormorant);
+  --font-body: var(--font-inter);
+  --accent-color: #C5A880;
+  --accent-light-color: #DFCEB4;
+
+  --font-hero-heading: var(--font-cormorant);
+  --font-hero-body: var(--font-inter);
+  --font-writing-heading: var(--font-playfair);
+  --font-writing-body: var(--font-inter);
+  --font-bento-heading: var(--font-space-grotesk);
+  --font-bento-body: var(--font-space-mono);
+  --font-gallery-heading: var(--font-jost);
+  --font-gallery-body: var(--font-inter);
+  --font-quote-heading: var(--font-cormorant);
+
+  /* Fallback overrides for Swiss Editorial (Serif headings, Sans-serif body) */
+  --font-hero-h-val: var(--font-hero-heading), var(--font-noto-serif-sc), var(--font-heading), Georgia, serif;
+  --font-hero-b-val: var(--font-hero-body), var(--font-body), sans-serif;
+  --font-writing-h-val: var(--font-writing-heading), var(--font-noto-serif-sc), var(--font-heading), Georgia, serif;
+  --font-writing-b-val: var(--font-writing-body), var(--font-body), sans-serif;
+  --font-bento-h-val: var(--font-bento-heading), var(--font-body), sans-serif;
+  --font-bento-b-val: var(--font-bento-body), monospace;
+  --font-gallery-h-val: var(--font-gallery-heading), var(--font-noto-serif-sc), var(--font-heading), Georgia, serif;
+  --font-gallery-b-val: var(--font-gallery-body), var(--font-body), sans-serif;
+  --font-quote-h-val: var(--font-quote-heading), var(--font-noto-serif-sc), var(--font-heading), Georgia, serif;
+}

@@ -1,0 +1,100 @@
+/* 4. 工业黑客粗野主义 (Industrial Brutalism) */
+.style-brutalist {
+  --font-heading: var(--font-space-mono);
+  --font-body: var(--font-space-mono);
+  --accent-color: #FF3E3E;
+  --accent-light-color: #FFAAAA;
+  --bg-color: #ECECEC;
+  --bg-dark-color: #DFDFDF;
+  --fg-color: #000000;
+  --border-line-color: #000000;
+
+  /* Brutalist raw pairings (Space Mono) */
+  --font-hero-heading: var(--font-space-mono);
+  --font-hero-body: var(--font-space-mono);
+  --font-writing-heading: var(--font-space-mono);
+  --font-writing-body: var(--font-space-mono);
+  --font-bento-heading: var(--font-space-mono);
+  --font-bento-body: var(--font-space-mono);
+  --font-gallery-heading: var(--font-space-mono);
+  --font-gallery-body: var(--font-space-mono);
+  --font-quote-heading: var(--font-space-mono);
+
+  /* Fallback overrides for Brutalist (console Monospace) */
+  --font-hero-h-val: var(--font-hero-heading), ui-monospace, SFMono-Regular, monospace;
+  --font-hero-b-val: var(--font-hero-body), ui-monospace, SFMono-Regular, monospace;
+  --font-writing-h-val: var(--font-writing-heading), ui-monospace, SFMono-Regular, monospace;
+  --font-writing-b-val: var(--font-writing-body), ui-monospace, SFMono-Regular, monospace;
+  --font-bento-h-val: var(--font-bento-heading), ui-monospace, SFMono-Regular, monospace;
+  --font-bento-b-val: var(--font-bento-body), ui-monospace, SFMono-Regular, monospace;
+  --font-gallery-h-val: var(--font-gallery-heading), ui-monospace, SFMono-Regular, monospace;
+  --font-gallery-b-val: var(--font-gallery-body), ui-monospace, SFMono-Regular, monospace;
+  --font-quote-h-val: var(--font-quote-heading), ui-monospace, SFMono-Regular, monospace;
+}
+.dark.style-brutalist {
+  --bg-color: #0A0A0A;
+  --bg-dark-color: #121212;
+  --fg-color: #00FF55; /* 黑客终端绿 */
+  --border-line-color: #00FF55;
+  --accent-color: #00FF55;
+  --accent-light-color: #00AA33;
+}
+/* 工业粗野背景点阵图 */
+.style-brutalist body {
+  background-color: var(--bg-color) !important;
+  background-image: radial-gradient(var(--border-line-color) 1.5px, transparent 1.5px) !important;
+  background-size: 20px 20px !important;
+}
+.style-brutalist .fixed.inset-0.z-1 { /* 隐藏视频背景 */
+  opacity: 0 !important;
+}
+/* 所有边框强制加粗、变黑且使用实线 */
+.style-brutalist .border {
+  border-width: 2px !important;
+  border-color: var(--border-line-color) !important;
+  border-style: solid !important;
+}
+.style-brutalist .border-t {
+  border-top-width: 2px !important;
+  border-color: var(--border-line-color) !important;
+  border-top-style: solid !important;
+}
+.style-brutalist .border-b {
+  border-bottom-width: 2px !important;
+  border-color: var(--border-line-color) !important;
+  border-bottom-style: solid !important;
+}
+.style-brutalist .border-l {
+  border-left-width: 2px !important;
+  border-color: var(--border-line-color) !important;
+  border-left-style: solid !important;
+}
+.style-brutalist .border-r {
+  border-right-width: 2px !important;
+  border-color: var(--border-line-color) !important;
+  border-right-style: solid !important;
+}
+/* 粗野主义直角消除 */
+.style-brutalist .rounded-3xl,
+.style-brutalist .rounded-2xl,
+.style-brutalist .rounded-xl,
+.style-brutalist .rounded-lg,
+.style-brutalist .rounded-md,
+.style-brutalist .rounded {
+  border-radius: 0px !important;
+}
+/* 粗野主义硬边缘阴影 */
+.style-brutalist .shadow-sm,
+.style-brutalist .shadow,
+.style-brutalist .shadow-md,
+.style-brutalist .shadow-lg,
+.style-brutalist .shadow-xl,
+.style-brutalist .shadow-2xl,
+.style-brutalist .shadow-\[0_12px_40px_-12px_rgba\(0\2c 0\2c 0\2c 0\.15\)\] {
+  box-shadow: 4px 4px 0px 0px var(--border-line-color) !important;
+  transition: transform 0.2s, box-shadow 0.2s !important;
+}
+.style-brutalist .group:hover {
+  transform: translate(-3px, -3px) !important;
+  box-shadow: 7px 7px 0px 0px var(--border-line-color) !important;
+}
