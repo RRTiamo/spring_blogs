@@ -9,6 +9,7 @@ import StyleConsole from "@/components/ui/StyleConsole";
 import BackToTop from "@/components/ui/BackToTop";
 import TapeStation from "@/components/ui/TapeStation";
 import ThemeApplier from "@/components/ui/ThemeApplier";
+import { fetchPublicConfigForServer } from "@/api/config";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -65,18 +66,15 @@ export async function generateMetadata(): Promise<Metadata> {
   let title = "春风不解别离 | 个人生活档案馆";
   let faviconUrl = "/icon.png";
   try {
-    const res = await fetch("http://localhost:8080/api/config/public", { next: { revalidate: 10 } });
-    if (res.ok) {
-      const data = await res.json();
-      if (data.code === 200 && Array.isArray(data.data)) {
-        const titleItem = data.data.find((c: any) => c.configKey === "site.title.default");
-        if (titleItem?.configValue) {
-          title = titleItem.configValue;
-        }
-        const favItem = data.data.find((c: any) => c.configKey === "site.favicon.url");
-        if (favItem?.configValue) {
-          faviconUrl = favItem.configValue;
-        }
+    const data = await fetchPublicConfigForServer({ next: { revalidate: 10 } });
+    if (data.code === 200 && Array.isArray(data.data)) {
+      const titleItem = data.data.find((c: any) => c.configKey === "site.title.default");
+      if (titleItem?.configValue) {
+        title = titleItem.configValue;
+      }
+      const favItem = data.data.find((c: any) => c.configKey === "site.favicon.url");
+      if (favItem?.configValue) {
+        faviconUrl = favItem.configValue;
       }
     }
   } catch (e) {

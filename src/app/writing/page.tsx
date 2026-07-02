@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Search, Lock, ArrowRight, ArrowLeft, Calendar, Tag, Smile } from "lucide-react";
 import Link from "next/link";
-import { writingData } from "@/data/writing";
 import { useArticles } from "@/hooks/useArticles";
 import Image from "next/image";
 import gsap from "gsap";
@@ -346,4 +345,3 @@ export default function WritingPage() {
     </div>
   );
 }
-

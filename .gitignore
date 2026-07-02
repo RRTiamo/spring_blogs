@@ -4,6 +4,8 @@ out/
 .DS_Store
 *.log
 .env*
+!.env.development
+!.env.production
 .pnp
 .pnp.*
 .yarn/*

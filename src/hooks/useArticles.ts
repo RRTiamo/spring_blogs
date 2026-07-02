@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from "react";
 import { Post, writingData } from "@/data/writing";
 import { getBlogsList } from "@/api/blogs";

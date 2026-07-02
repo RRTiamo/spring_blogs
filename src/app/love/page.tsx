@@ -2,11 +2,6 @@ import { notFound } from "next/navigation";
 import LovePageClient from "@/components/love/LovePageClient";
 import { getPublicConfig } from "@/api/config";
 
-interface PublicConfig {
-  configKey: string;
-  configValue: string;
-}
-
 async function getPublicConfigs(): Promise<Record<string, string>> {
   try {
     const response = await getPublicConfig();

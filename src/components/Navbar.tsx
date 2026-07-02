@@ -197,7 +197,14 @@ export default function Navbar() {
           {/* Logo 标志性小图标 */}
           {logoUrl ? (
             <span className="logo-a-icon relative flex h-5 w-5 items-center justify-center overflow-hidden rounded bg-transparent">
-              <img src={logoUrl} alt="Logo" className="w-full h-full object-contain" />
+              <Image
+                src={logoUrl}
+                alt="Logo"
+                fill
+                sizes="20px"
+                unoptimized
+                className="object-contain"
+              />
             </span>
           ) : (
             <span className="logo-a-icon relative flex h-5 w-5 items-center justify-center overflow-hidden rounded bg-charcoal text-cream dark:bg-cream dark:text-charcoal transition-colors">

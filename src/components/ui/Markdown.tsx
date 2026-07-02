@@ -1,29 +1,154 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import hljs from "highlight.js";
 import "highlight.js/styles/github-dark.css";
+import {
+  Copy,
+  Check,
+  Info,
+  Lightbulb,
+  AlertTriangle,
+  AlertCircle,
+  X,
+  Link as LinkIcon,
+  Square,
+  CheckSquare
+} from "lucide-react";
 
-// Recursive inline markdown parser for Bold, Italic, Code, and Links
-export function parseInline(text: string, offset: number = 0): React.ReactNode[] {
+// Types for Callout / Alert
+export type CalloutType = "NOTE" | "TIP" | "IMPORTANT" | "WARNING" | "CAUTION";
+
+interface CalloutConfig {
+  icon: React.ElementType;
+  title: string;
+  borderColorClass: string;
+  bgColorClass: string;
+  textColorClass: string;
+  iconColorClass: string;
+}
+
+const CALLOUT_MAP: Record<CalloutType, CalloutConfig> = {
+  NOTE: {
+    icon: Info,
+    title: "NOTE",
+    borderColorClass: "border-sky-500/30 dark:border-sky-400/30",
+    bgColorClass: "bg-sky-500/10 dark:bg-sky-500/15",
+    textColorClass: "text-sky-900 dark:text-sky-200",
+    iconColorClass: "text-sky-600 dark:text-sky-400",
+  },
+  TIP: {
+    icon: Lightbulb,
+    title: "TIP",
+    borderColorClass: "border-emerald-500/30 dark:border-emerald-400/30",
+    bgColorClass: "bg-emerald-500/10 dark:bg-emerald-500/15",
+    textColorClass: "text-emerald-900 dark:text-emerald-200",
+    iconColorClass: "text-emerald-600 dark:text-emerald-400",
+  },
+  IMPORTANT: {
+    icon: Info,
+    title: "IMPORTANT",
+    borderColorClass: "border-purple-500/30 dark:border-purple-400/30",
+    bgColorClass: "bg-purple-500/10 dark:bg-purple-500/15",
+    textColorClass: "text-purple-900 dark:text-purple-200",
+    iconColorClass: "text-purple-600 dark:text-purple-400",
+  },
+  WARNING: {
+    icon: AlertTriangle,
+    title: "WARNING",
+    borderColorClass: "border-amber-500/30 dark:border-amber-400/30",
+    bgColorClass: "bg-amber-500/10 dark:bg-amber-500/15",
+    textColorClass: "text-amber-900 dark:text-amber-200",
+    iconColorClass: "text-amber-600 dark:text-amber-400",
+  },
+  CAUTION: {
+    icon: AlertCircle,
+    title: "CAUTION",
+    borderColorClass: "border-rose-500/30 dark:border-rose-400/30",
+    bgColorClass: "bg-rose-500/10 dark:bg-rose-500/15",
+    textColorClass: "text-rose-900 dark:text-rose-200",
+    iconColorClass: "text-rose-600 dark:text-rose-400",
+  },
+};
+
+// Copy button for code blocks with rich micro-interactions
+function CopyButton({ code }: { code: string }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy code: ", err);
+    }
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={handleCopy}
+      className={`group relative flex items-center gap-1.5 px-3 py-1 text-[11px] font-sans font-medium rounded-lg transition-all duration-300 border backdrop-blur-md cursor-pointer active:scale-95 select-none ${
+        copied
+          ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40 shadow-[0_0_12px_rgba(16,185,129,0.25)]"
+          : "bg-white/[0.06] text-white/70 hover:text-white hover:bg-white/[0.12] border-white/10 hover:border-white/25 shadow-xs"
+      }`}
+      title="复制代码到剪贴板"
+    >
+      {copied ? (
+        <>
+          <Check className="w-3.5 h-3.5 text-emerald-400 animate-in zoom-in-50 duration-200" />
+          <span className="text-emerald-300 font-semibold tracking-wide">已复制</span>
+        </>
+      ) : (
+        <>
+          <Copy className="w-3.5 h-3.5 text-white/50 group-hover:text-white/90 transition-colors" />
+          <span className="tracking-wide">复制</span>
+        </>
+      )}
+    </button>
+  );
+}
+
+// Recursive inline markdown parser for Bold, Italic, Strikethrough, Highlight, Kbd, Code, Links, Task checkbox, Images
+export function parseInline(text: string, onImageClick?: (url: string, alt: string) => void, offset: number = 0): React.ReactNode[] {
   if (!text) return [];
 
   let minIndex = Infinity;
-  let matchType: "bold" | "italic" | "code" | "link" | "image" | null = null;
+  let matchType: "image" | "bold" | "italic" | "strike" | "highlight" | "kbd" | "code" | "link" | "task_checked" | "task_unchecked" | null = null;
   let matchedString = "";
-  let matchData: string | { text: string; url: string } | null = null;
+  let matchData: any = null;
 
-  // 0. Image (![alt](url))
+  // 0. Task Checkboxes ([x] or [ ])
+  const taskCheckedRegex = /^\[([xX])\]\s+/;
+  const taskUncheckedRegex = /^\[\s\]\s+/;
+  const taskCheckedMatch = taskCheckedRegex.exec(text);
+  if (taskCheckedMatch && taskCheckedMatch.index < minIndex) {
+    minIndex = taskCheckedMatch.index;
+    matchType = "task_checked";
+    matchedString = taskCheckedMatch[0];
+  }
+  const taskUncheckedMatch = taskUncheckedRegex.exec(text);
+  if (taskUncheckedMatch && taskUncheckedMatch.index < minIndex) {
+    minIndex = taskUncheckedMatch.index;
+    matchType = "task_unchecked";
+    matchedString = taskUncheckedMatch[0];
+  }
+
+  // 1. Image (![alt](url))
   const imageRegex = /!\[([^\]]*)\]\(([^)]+)\)/;
   const imageMatch = imageRegex.exec(text);
   if (imageMatch && imageMatch.index < minIndex) {
     minIndex = imageMatch.index;
     matchType = "image";
     matchedString = imageMatch[0];
-    matchData = { text: imageMatch[1], url: imageMatch[2] };
+    matchData = { alt: imageMatch[1], url: imageMatch[2] };
   }
 
-  // 1. Bold (**text**)
+  // 2. Bold (**text**)
   const boldRegex = /\*\*([^*]+)\*\*/;
   const boldMatch = boldRegex.exec(text);
   if (boldMatch && boldMatch.index < minIndex) {
@@ -33,7 +158,27 @@ export function parseInline(text: string, offset: number = 0): React.ReactNode[]
     matchData = boldMatch[1];
   }
 
-  // 2. Italic (*text*)
+  // 3. Highlight (==text==)
+  const highlightRegex = /==([^=]+)==/;
+  const highlightMatch = highlightRegex.exec(text);
+  if (highlightMatch && highlightMatch.index < minIndex) {
+    minIndex = highlightMatch.index;
+    matchType = "highlight";
+    matchedString = highlightMatch[0];
+    matchData = highlightMatch[1];
+  }
+
+  // 4. Strikethrough (~~text~~)
+  const strikeRegex = /~~([^~]+)~~/;
+  const strikeMatch = strikeRegex.exec(text);
+  if (strikeMatch && strikeMatch.index < minIndex) {
+    minIndex = strikeMatch.index;
+    matchType = "strike";
+    matchedString = strikeMatch[0];
+    matchData = strikeMatch[1];
+  }
+
+  // 5. Italic (*text*)
   const italicRegex = /\*([^*]+)\*/;
   const italicMatch = italicRegex.exec(text);
   if (italicMatch && italicMatch.index < minIndex) {
@@ -43,7 +188,17 @@ export function parseInline(text: string, offset: number = 0): React.ReactNode[]
     matchData = italicMatch[1];
   }
 
-  // 3. Inline Code (`code`)
+  // 6. Inline Kbd (<kbd>Key</kbd>)
+  const kbdRegex = /<kbd>([^<]+)<\/kbd>/i;
+  const kbdMatch = kbdRegex.exec(text);
+  if (kbdMatch && kbdMatch.index < minIndex) {
+    minIndex = kbdMatch.index;
+    matchType = "kbd";
+    matchedString = kbdMatch[0];
+    matchData = kbdMatch[1];
+  }
+
+  // 7. Inline Code (`code`)
   const codeRegex = /`([^`]+)`/;
   const codeMatch = codeRegex.exec(text);
   if (codeMatch && codeMatch.index < minIndex) {
@@ -53,7 +208,7 @@ export function parseInline(text: string, offset: number = 0): React.ReactNode[]
     matchData = codeMatch[1];
   }
 
-  // 4. Link ([text](url))
+  // 8. Link ([text](url))
   const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/;
   const linkMatch = linkRegex.exec(text);
   if (linkMatch && linkMatch.index < minIndex) {
@@ -72,27 +227,61 @@ export function parseInline(text: string, offset: number = 0): React.ReactNode[]
 
   const result: React.ReactNode[] = [];
   if (before) {
-    result.push(...parseInline(before, offset));
+    result.push(...parseInline(before, onImageClick, offset));
   }
 
   const key = `${matchType}-${offset + minIndex}`;
-  if (matchType === "bold" && typeof matchData === "string") {
+
+  if (matchType === "task_checked") {
     result.push(
-      <strong key={key} className="font-bold text-charcoal dark:text-cream">
-        {parseInline(matchData, offset + minIndex + 2)}
+      <span key={key} className="inline-flex items-center align-middle mr-2 text-(--accent-color)">
+        <CheckSquare className="w-4 h-4" />
+      </span>
+    );
+  } else if (matchType === "task_unchecked") {
+    result.push(
+      <span key={key} className="inline-flex items-center align-middle mr-2 text-(--fg-color)/40">
+        <Square className="w-4 h-4" />
+      </span>
+    );
+  } else if (matchType === "bold" && typeof matchData === "string") {
+    result.push(
+      <strong key={key} className="font-bold text-(--fg-color)">
+        {parseInline(matchData, onImageClick, offset + minIndex + 2)}
       </strong>
     );
   } else if (matchType === "italic" && typeof matchData === "string") {
     result.push(
-      <em key={key} className="italic text-charcoal/90 dark:text-cream/90">
-        {parseInline(matchData, offset + minIndex + 1)}
+      <em key={key} className="italic text-(--fg-color)/90 font-serif">
+        {parseInline(matchData, onImageClick, offset + minIndex + 1)}
       </em>
+    );
+  } else if (matchType === "strike" && typeof matchData === "string") {
+    result.push(
+      <del key={key} className="line-through text-(--fg-color)/50">
+        {parseInline(matchData, onImageClick, offset + minIndex + 2)}
+      </del>
+    );
+  } else if (matchType === "highlight" && typeof matchData === "string") {
+    result.push(
+      <mark key={key} className="bg-(--accent-color)/20 text-(--fg-color) px-1.5 py-0.5 rounded font-medium border-b-2 border-(--accent-color)/40">
+        {parseInline(matchData, onImageClick, offset + minIndex + 2)}
+      </mark>
+    );
+  } else if (matchType === "kbd" && typeof matchData === "string") {
+    result.push(
+      <kbd
+        key={key}
+        className="px-2 py-1 text-xs font-mono text-(--fg-color)/90 bg-(--bg-dark-color)/80 rounded-md border border-(--border-line-color) shadow-[0_2px_0_rgba(0,0,0,0.15)] dark:shadow-[0_2px_0_rgba(255,255,255,0.08)] inline-block mx-0.5"
+      >
+        {matchData}
+      </kbd>
     );
   } else if (matchType === "code" && typeof matchData === "string") {
     result.push(
       <code
         key={key}
-        className="px-1.5 py-0.5 font-mono text-[0.8em] text-rose-600 bg-rose-500/10 dark:text-rose-400 dark:bg-rose-950/20 rounded border border-rose-500/20 dark:border-rose-900/50"
+        className="px-1.5 py-0.5 font-mono text-[0.85em] text-(--accent-color) bg-(--accent-color)/10 rounded border border-(--accent-color)/20 font-medium"
       >
         {matchData}
       </code>
@@ -104,31 +293,46 @@ export function parseInline(text: string, offset: number = 0): React.ReactNode[]
         href={matchData.url}
         target="_blank"
         rel="noopener noreferrer"
-        className="text-gold hover:underline border-b border-gold/20 pb-0.5 transition-all font-sans text-[0.95em]"
+        className="text-(--accent-color) hover:text-(--accent-light-color) underline underline-offset-4 decoration-(--accent-color)/30 hover:decoration-(--accent-color) transition-colors font-sans font-medium text-[0.95em] inline-inline-flex items-center gap-0.5"
       >
-        {parseInline(matchData.text, offset + minIndex + 1)}
+        {parseInline(matchData.text, onImageClick, offset + minIndex + 1)}
       </a>
     );
-  } else if (matchType === "image" && matchData && typeof matchData === "object" && "text" in matchData) {
+  } else if (matchType === "image" && matchData && typeof matchData === "object" && "url" in matchData) {
+    const { url, alt } = matchData;
     result.push(
-      <span key={key} className="block my-6 overflow-hidden rounded-2xl border border-charcoal/10 dark:border-white/10 bg-charcoal/5 dark:bg-white/5">
-        <img
-          src={matchData.url}
-          alt={matchData.text}
-          className="w-full h-auto max-h-[500px] object-cover hover:scale-[1.01] transition-transform duration-500"
-          loading="lazy"
-        />
-        {matchData.text && (
-          <span className="block text-center text-xs tone-muted py-2.5 border-t border-charcoal/5 dark:border-white/5 bg-charcoal/[0.02] dark:bg-white/[0.01] font-sans">
-            {matchData.text}
-          </span>
+      <figure
+        key={key}
+        className="group relative my-8 overflow-hidden rounded-2xl border border-(--border-line-color) bg-(--bg-dark-color)/40 p-2 sm:p-3 transition-all duration-300 hover:shadow-xl"
+      >
+        <div
+          className="relative overflow-hidden rounded-xl cursor-zoom-in"
+          onClick={() => onImageClick?.(url, alt)}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={url}
+            alt={alt || "Article Image"}
+            className="w-full h-auto max-h-[550px] object-cover rounded-xl group-hover:scale-[1.015] transition-transform duration-500 ease-out"
+            loading="lazy"
+          />
+          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
+            <span className="px-3 py-1.5 bg-black/60 backdrop-blur-md text-white text-xs font-sans rounded-full shadow-lg flex items-center gap-1.5 border border-white/20">
+              点击放大预览
+            </span>
+          </div>
+        </div>
+        {alt && (
+          <figcaption className="text-center text-xs text-(--fg-color)/60 pt-3 pb-1 font-sans tracking-wide">
+            {alt}
+          </figcaption>
         )}
-      </span>
+      </figure>
     );
   }
 
   if (after) {
-    result.push(...parseInline(after, offset + minIndex + matchedString.length));
+    result.push(...parseInline(after, onImageClick, offset + minIndex + matchedString.length));
   }
 
   return result;
@@ -142,12 +346,12 @@ function parseTableLine(line: string): string[] {
   if (trimmed.endsWith("|")) {
     trimmed = trimmed.slice(0, -1);
   }
-  return trimmed.split("|").map(cell => cell.trim());
+  return trimmed.split("|").map((cell) => cell.trim());
 }
 
 function parseTableAligns(line: string): ("left" | "center" | "right")[] {
   const parts = parseTableLine(line);
-  return parts.map(part => {
+  return parts.map((part) => {
     const trimmed = part.trim();
     const left = trimmed.startsWith(":");
     const right = trimmed.endsWith(":");
@@ -157,11 +361,26 @@ function parseTableAligns(line: string): ("left" | "center" | "right")[] {
   });
 }
 
-interface Block {
-  type: "h1" | "h2" | "h3" | "h4" | "paragraph" | "blockquote" | "ul" | "ol" | "code" | "table";
+export interface Block {
+  type:
+    | "h1"
+    | "h2"
+    | "h3"
+    | "h4"
+    | "h5"
+    | "h6"
+    | "paragraph"
+    | "blockquote"
+    | "callout"
+    | "ul"
+    | "ol"
+    | "code"
+    | "table"
+    | "hr";
   content?: string;
   lines?: string[];
   lang?: string;
+  calloutType?: CalloutType;
   tableData?: {
     headers: string[];
     aligns: ("left" | "center" | "right")[];
@@ -185,15 +404,14 @@ export function parseBlocks(content: string): Block[] {
         currentBlock.tableData!.rows.push(row);
         continue;
       } else {
-        // Table ends
         blocks.push(currentBlock);
         currentBlock = null;
-        i--; // re-process current line
+        i--; // re-process line
         continue;
       }
     }
 
-    // 0.5. Check Table Start
+    // 0.5. Table Start Check
     if (line.includes("|") && i + 1 < lines.length) {
       const nextLine = lines[i + 1];
       const tableDividerRegex = /^\s*\|?\s*(:?-+:?)\s*(\|\s*(:?-+:?)\s*)*\|?\s*$/;
@@ -208,10 +426,10 @@ export function parseBlocks(content: string): Block[] {
           tableData: {
             headers,
             aligns,
-            rows: []
-          }
+            rows: [],
+          },
         };
-        i++; // skip divider line
+        i++; // skip divider
         continue;
       }
     }
@@ -219,11 +437,9 @@ export function parseBlocks(content: string): Block[] {
     // 1. Code Block (```lang)
     if (trimmed.startsWith("```")) {
       if (currentBlock && currentBlock.type === "code") {
-        // End of code block
         blocks.push(currentBlock);
         currentBlock = null;
       } else {
-        // Start of code block
         if (currentBlock) {
           blocks.push(currentBlock);
         }
@@ -238,7 +454,49 @@ export function parseBlocks(content: string): Block[] {
       continue;
     }
 
-    // 2. Unordered List (- or *)
+    // 2. Horizontal Rule (---, ***, ___)
+    if (/^(---|[*]{3,}|_{3,})$/.test(trimmed)) {
+      if (currentBlock) {
+        blocks.push(currentBlock);
+        currentBlock = null;
+      }
+      blocks.push({ type: "hr" });
+      continue;
+    }
+
+    // 3. Callout / Blockquote (>)
+    if (trimmed.startsWith(">")) {
+      const quoteContent = line.replace(/^\s*>\s?/, "");
+
+      // Check if this is the start of a Callout: > [!NOTE] etc.
+      const calloutMatch = quoteContent.match(/^\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]/i);
+
+      if (calloutMatch) {
+        if (currentBlock) {
+          blocks.push(currentBlock);
+        }
+        const calloutType = calloutMatch[1].toUpperCase() as CalloutType;
+        const remainingText = quoteContent.replace(/^\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]\s*/i, "");
+        currentBlock = {
+          type: "callout",
+          calloutType,
+          lines: remainingText ? [remainingText] : [],
+        };
+        continue;
+      }
+
+      if (currentBlock && (currentBlock.type === "blockquote" || currentBlock.type === "callout")) {
+        currentBlock.lines!.push(quoteContent);
+      } else {
+        if (currentBlock) {
+          blocks.push(currentBlock);
+        }
+        currentBlock = { type: "blockquote", lines: [quoteContent] };
+      }
+      continue;
+    }
+
+    // 4. Unordered List (- or * or +)
     const ulMatch = line.match(/^(\s*)([-*+])\s+(.*)$/);
     if (ulMatch) {
       const itemContent = ulMatch[3];
@@ -253,7 +511,7 @@ export function parseBlocks(content: string): Block[] {
       continue;
     }
 
-    // 3. Ordered List (1., 2.)
+    // 5. Ordered List (1., 2.)
     const olMatch = line.match(/^(\s*)(\d+)\.\s+(.*)$/);
     if (olMatch) {
       const itemContent = olMatch[3];
@@ -268,42 +526,29 @@ export function parseBlocks(content: string): Block[] {
       continue;
     }
 
-    // 4. Blockquote (>)
-    if (trimmed.startsWith(">")) {
-      const quoteContent = line.replace(/^\s*>\s?/, "");
-      if (currentBlock && currentBlock.type === "blockquote") {
-        currentBlock.lines!.push(quoteContent);
-      } else {
-        if (currentBlock) {
-          blocks.push(currentBlock);
-        }
-        currentBlock = { type: "blockquote", lines: [quoteContent] };
-      }
-      continue;
-    }
-
-    // 5. Headings
+    // 6. Headings (# H1 ~ ###### H6)
     if (trimmed.startsWith("#")) {
-      const hMatch = trimmed.match(/^(#{1,4})\s+(.*)$/);
+      const hMatch = trimmed.match(/^(#{1,6})\s+(.*)$/);
       if (hMatch) {
         if (currentBlock) {
           blocks.push(currentBlock);
         }
         const level = hMatch[1].length;
         const hContent = hMatch[2];
-        const hType = level === 1 ? "h1" : level === 2 ? "h2" : level === 3 ? "h3" : "h4";
+        const hType = `h${level}` as "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
         blocks.push({ type: hType, content: hContent });
         currentBlock = null;
         continue;
       }
     }
 
-    // 6. Blank line
+    // 7. Blank Line
     if (trimmed === "") {
       if (currentBlock) {
         if (
           currentBlock.type === "paragraph" ||
           currentBlock.type === "blockquote" ||
+          currentBlock.type === "callout" ||
           currentBlock.type === "ul" ||
           currentBlock.type === "ol"
         ) {
@@ -314,7 +559,7 @@ export function parseBlocks(content: string): Block[] {
       continue;
     }
 
-    // 7. Paragraph
+    // 8. Paragraph
     if (currentBlock && currentBlock.type === "paragraph") {
       currentBlock.lines!.push(line);
     } else {
@@ -332,41 +577,126 @@ export function parseBlocks(content: string): Block[] {
   return blocks;
 }
 
+// Image Lightbox Modal using React Portal
+function ImageLightbox({
+  src,
+  alt,
+  onClose,
+}: {
+  src: string;
+  alt: string;
+  onClose: () => void;
+}) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    // Lock background scroll when Lightbox is open
+    const originalStyle = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = originalStyle;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [onClose]);
+
+  if (!mounted || typeof document === "undefined") return null;
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/85 backdrop-blur-md p-4 sm:p-8 animate-fadeIn"
+      onClick={onClose}
+    >
+      <button
+        type="button"
+        onClick={onClose}
+        className="absolute top-6 right-6 p-2.5 rounded-full bg-white/15 text-white hover:bg-white/30 transition-colors border border-white/20 cursor-pointer z-[10000] shadow-lg"
+        title="关闭预览 (Esc)"
+      >
+        <X className="w-6 h-6" />
+      </button>
+      <div
+        className="relative max-w-6xl max-h-[90vh] overflow-hidden rounded-2xl border border-white/15 shadow-2xl bg-black/40"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={src}
+          alt={alt}
+          className="w-full h-auto max-h-[85vh] object-contain rounded-2xl"
+        />
+        {alt && (
+          <div className="bg-black/80 backdrop-blur-md text-center text-xs sm:text-sm text-white/90 py-3 px-4 font-sans border-t border-white/10">
+            {alt}
+          </div>
+        )}
+      </div>
+    </div>,
+    document.body
+  );
+}
+
 export default function Markdown({ content }: { content: string }) {
+  const [activeImage, setActiveImage] = useState<{ url: string; alt: string } | null>(null);
   const blocks = parseBlocks(content);
 
+  const handleImageClick = (url: string, alt: string) => {
+    setActiveImage({ url, alt });
+  };
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 text-(--fg-color)">
       {blocks.map((block, idx) => {
         const key = `${block.type}-${idx}`;
         switch (block.type) {
+          case "hr":
+            return (
+              <div key={key} className="relative my-10 flex items-center justify-center">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-(--border-line-color)" />
+                </div>
+                <div className="relative bg-(--bg-color) px-4">
+                  <span className="inline-block w-2 h-2 rotate-45 bg-(--accent-color)/40 rounded-[1px]" />
+                </div>
+              </div>
+            );
+
           case "table": {
             const data = block.tableData;
             if (!data) return null;
             return (
-              <div key={key} className="my-6 overflow-x-auto rounded-2xl border border-charcoal/10 dark:border-white/10 bg-charcoal/[0.02] dark:bg-white/[0.01]">
-                <table className="w-full border-collapse text-left text-xs md:text-sm font-sans tracking-wide text-charcoal/80 dark:text-cream/80">
+              <div
+                key={key}
+                className="my-8 overflow-x-auto rounded-2xl border border-(--border-line-color) bg-(--bg-dark-color)/30 shadow-sm"
+              >
+                <table className="w-full border-collapse text-left text-xs md:text-sm font-sans tracking-wide">
                   <thead>
-                    <tr className="border-b border-charcoal/10 dark:border-white/10 bg-charcoal/5 dark:bg-white/5 text-charcoal dark:text-cream font-medium">
+                    <tr className="border-b border-(--border-line-color) bg-(--accent-color)/10 text-(--fg-color) font-semibold">
                       {data.headers.map((header, i) => {
                         const align = data.aligns[i] || "left";
                         return (
                           <th
                             key={i}
                             style={{ textAlign: align }}
-                            className="px-4 py-3 font-semibold text-[0.9em] uppercase tracking-wider"
+                            className="px-4 py-3.5 uppercase tracking-wider text-[0.85em] text-(--accent-color)"
                           >
-                            {parseInline(header)}
+                            {parseInline(header, handleImageClick)}
                           </th>
                         );
                       })}
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-charcoal/5 dark:divide-white/5">
+                  <tbody className="divide-y divide-(--border-line-color)">
                     {data.rows.map((row, rIdx) => (
                       <tr
                         key={rIdx}
-                        className="hover:bg-charcoal/[0.04] dark:hover:bg-white/[0.02] transition-colors"
+                        className="hover:bg-(--accent-color)/5 transition-colors"
                       >
                         {row.map((cell, cIdx) => {
                           const align = data.aligns[cIdx] || "left";
@@ -374,9 +704,9 @@ export default function Markdown({ content }: { content: string }) {
                             <td
                               key={cIdx}
                               style={{ textAlign: align }}
-                              className="px-4 py-3 leading-relaxed"
+                              className="px-4 py-3 leading-relaxed text-(--fg-color)/85"
                             >
-                              {parseInline(cell)}
+                              {parseInline(cell, handleImageClick)}
                             </td>
                           );
                         })}
@@ -387,95 +717,171 @@ export default function Markdown({ content }: { content: string }) {
               </div>
             );
           }
+
           case "h1":
-            return (
-              <h1
-                key={key}
-                id={`heading-${idx}`}
-                className="font-serif text-2xl md:text-3xl font-light text-charcoal dark:text-cream mt-10 mb-4 border-b border-charcoal/10 dark:border-white/10 pb-2.5 tracking-wide leading-snug"
-              >
-                {parseInline(block.content || "")}
-              </h1>
-            );
           case "h2":
-            return (
-              <h2
-                key={key}
-                id={`heading-${idx}`}
-                className="font-serif text-xl md:text-2xl font-light text-charcoal dark:text-cream mt-8 mb-4 border-b border-charcoal/5 dark:border-white/5 pb-1.5 tracking-wide leading-snug"
-              >
-                {parseInline(block.content || "")}
-              </h2>
-            );
           case "h3":
-            return (
-              <h3
-                key={key}
-                id={`heading-${idx}`}
-                className="font-serif text-lg md:text-xl font-light text-charcoal dark:text-cream mt-6 mb-3 tracking-wide"
-              >
-                {parseInline(block.content || "")}
-              </h3>
-            );
           case "h4":
+          case "h5":
+          case "h6": {
+            const textContent = block.content || "";
+            const slug = textContent
+              .toLowerCase()
+              .replace(/[^\w\u4e00-\u9fa5]+/g, "-")
+              .replace(/^-+|-+$/g, "");
+            const headingId = slug || `heading-${idx}`;
+
+            const baseHeadingClasses =
+              "group relative font-serif text-(--fg-color) tracking-wide leading-snug font-normal flex items-center gap-2.5";
+
+            if (block.type === "h1") {
+              return (
+                <h1
+                  key={key}
+                  id={headingId}
+                  className={`${baseHeadingClasses} text-2xl md:text-3xl mt-12 mb-5 pb-3 border-b border-(--border-line-color)`}
+                >
+                  <span className="w-1.5 h-6 rounded-full bg-(--accent-color) shrink-0" />
+                  <span className="flex-1">{parseInline(textContent, handleImageClick)}</span>
+                  <a
+                    href={`#${headingId}`}
+                    className="opacity-0 group-hover:opacity-100 transition-opacity text-(--accent-color)/60 hover:text-(--accent-color) p-1"
+                    title="锚点链接"
+                  >
+                    <LinkIcon className="w-4 h-4" />
+                  </a>
+                </h1>
+              );
+            }
+            if (block.type === "h2") {
+              return (
+                <h2
+                  key={key}
+                  id={headingId}
+                  className={`${baseHeadingClasses} text-xl md:text-2xl mt-10 mb-4 pb-2 border-b border-(--border-line-color)/60`}
+                >
+                  <span className="w-1.5 h-5 rounded-full bg-(--accent-color)/80 shrink-0" />
+                  <span className="flex-1">{parseInline(textContent, handleImageClick)}</span>
+                  <a
+                    href={`#${headingId}`}
+                    className="opacity-0 group-hover:opacity-100 transition-opacity text-(--accent-color)/60 hover:text-(--accent-color) p-1"
+                    title="锚点链接"
+                  >
+                    <LinkIcon className="w-4 h-4" />
+                  </a>
+                </h2>
+              );
+            }
+            if (block.type === "h3") {
+              return (
+                <h3
+                  key={key}
+                  id={headingId}
+                  className={`${baseHeadingClasses} text-lg md:text-xl mt-8 mb-3`}
+                >
+                  <span className="w-2 h-2 rounded-full bg-(--accent-color) shrink-0" />
+                  <span className="flex-1">{parseInline(textContent, handleImageClick)}</span>
+                  <a
+                    href={`#${headingId}`}
+                    className="opacity-0 group-hover:opacity-100 transition-opacity text-(--accent-color)/60 hover:text-(--accent-color) p-1"
+                    title="锚点链接"
+                  >
+                    <LinkIcon className="w-3.5 h-3.5" />
+                  </a>
+                </h3>
+              );
+            }
             return (
               <h4
                 key={key}
-                id={`heading-${idx}`}
-                className="font-serif text-base md:text-lg font-light text-charcoal dark:text-cream mt-4 mb-2 tracking-wide"
+                id={headingId}
+                className={`${baseHeadingClasses} text-base md:text-lg mt-6 mb-2 text-(--fg-color)/90`}
               >
-                {parseInline(block.content || "")}
+                <span className="flex-1">{parseInline(textContent, handleImageClick)}</span>
               </h4>
             );
+          }
+
+          case "callout": {
+            const calloutType = block.calloutType || "NOTE";
+            const config = CALLOUT_MAP[calloutType];
+            const Icon = config.icon;
+            const calloutText = block.lines ? block.lines.join(" ") : "";
+
+            return (
+              <div
+                key={key}
+                className={`my-6 rounded-2xl border ${config.borderColorClass} ${config.bgColorClass} p-4.5 sm:p-5 shadow-sm transition-all`}
+              >
+                <div className="flex items-center gap-2.5 mb-2 font-sans font-semibold text-xs tracking-wider uppercase">
+                  <Icon className={`w-4 h-4 ${config.iconColorClass}`} />
+                  <span className={config.textColorClass}>{config.title}</span>
+                </div>
+                <div className={`font-serif text-sm md:text-base leading-relaxed ${config.textColorClass} opacity-95`}>
+                  {parseInline(calloutText, handleImageClick)}
+                </div>
+              </div>
+            );
+          }
+
+          case "blockquote": {
+            const quoteText = block.lines ? block.lines.join(" ") : "";
+            return (
+              <blockquote
+                key={key}
+                className="font-serif italic text-base md:text-lg text-(--fg-color)/80 pl-5 border-l-4 border-(--accent-color) bg-(--accent-color)/5 px-5 py-3.5 rounded-r-2xl my-6 leading-relaxed shadow-xs"
+              >
+                {parseInline(quoteText, handleImageClick)}
+              </blockquote>
+            );
+          }
+
           case "paragraph": {
             const text = block.lines ? block.lines.join(" ") : "";
             return (
               <p
                 key={key}
-                className="text-justify leading-loose text-charcoal/85 dark:text-cream/85 text-sm md:text-base font-serif tracking-wide"
+                className="text-justify leading-loose text-(--fg-color)/85 text-base font-serif tracking-wide"
               >
-                {parseInline(text)}
+                {parseInline(text, handleImageClick)}
               </p>
             );
           }
-          case "blockquote": {
-            const text = block.lines ? block.lines.join(" ") : "";
-            return (
-              <blockquote
-                key={key}
-                className="font-serif italic text-base md:text-lg text-charcoal/70 dark:text-cream/70 pl-6 border-l-4 border-gold bg-gold/5 dark:bg-gold/10 px-6 py-4 rounded-r-2xl my-6 leading-relaxed shadow-sm"
-              >
-                {parseInline(text)}
-              </blockquote>
-            );
-          }
+
           case "ul":
             return (
               <ul
                 key={key}
-                className="list-none pl-4 space-y-2.5 text-xs md:text-sm font-sans tracking-wider text-charcoal/75 dark:text-cream/75 my-6 bg-charcoal/5 dark:bg-white/5 p-6 rounded-2xl border border-charcoal/5 dark:border-white/5"
+                className="list-none pl-2 space-y-2.5 text-sm md:text-base font-serif tracking-wide text-(--fg-color)/85 my-6 bg-(--bg-dark-color)/30 p-5 rounded-2xl border border-(--border-line-color)"
               >
-                {block.lines?.map((line, i) => (
-                  <li key={i} className="flex items-start gap-2.5">
-                    <span className="text-gold mt-1.5 inline-block w-1.5 h-1.5 shrink-0 rounded-full bg-gold" />
-                    <span className="leading-relaxed">{parseInline(line)}</span>
-                  </li>
-                ))}
+                {block.lines?.map((line, i) => {
+                  const isTask = /^\[([ xX])\]/.test(line.trim());
+                  return (
+                    <li key={i} className="flex items-start gap-2.5">
+                      {!isTask && (
+                        <span className="mt-2.5 inline-block w-1.5 h-1.5 shrink-0 rounded-full bg-(--accent-color)" />
+                      )}
+                      <span className="leading-relaxed flex-1">{parseInline(line, handleImageClick)}</span>
+                    </li>
+                  );
+                })}
               </ul>
             );
+
           case "ol":
             return (
               <ol
                 key={key}
-                className="list-decimal pl-6 space-y-2.5 text-xs md:text-sm font-sans tracking-wider text-charcoal/75 dark:text-cream/75 my-6 bg-charcoal/5 dark:bg-white/5 p-6 rounded-2xl border border-charcoal/5 dark:border-white/5"
+                className="list-decimal pl-6 space-y-2.5 text-sm md:text-base font-serif tracking-wide text-(--fg-color)/85 my-6 bg-(--bg-dark-color)/30 p-5 rounded-2xl border border-(--border-line-color)"
               >
                 {block.lines?.map((line, i) => (
                   <li key={i} className="pl-1 leading-relaxed">
-                    <span>{parseInline(line)}</span>
+                    <span>{parseInline(line, handleImageClick)}</span>
                   </li>
                 ))}
               </ol>
             );
+
           case "code": {
             const codeText = block.lines ? block.lines.join("\n") : "";
             const lang = block.lang;
@@ -493,29 +899,42 @@ export default function Markdown({ content }: { content: string }) {
             return (
               <div
                 key={key}
-                className="my-6 rounded-2xl overflow-hidden border border-charcoal/10 dark:border-white/10 bg-[#0d1117] shadow-xl font-mono text-xs"
+                className="my-8 rounded-2xl overflow-hidden border border-white/10 bg-[#0d1117] shadow-xl font-mono text-xs md:text-sm"
               >
-                {/* Mac 风格三色窗口控制栏 */}
-                <div className="flex items-center justify-between px-4 py-3 bg-[#161b22] border-b border-charcoal/5 dark:border-white/5">
+                {/* Mac Terminal Topbar */}
+                <div className="flex items-center justify-between px-4 py-3 bg-[#161b22] border-b border-white/10 select-none">
                   <div className="flex items-center gap-2">
                     <span className="w-3 h-3 rounded-full bg-[#ff5f56] border border-[#e0443e] inline-block shrink-0" />
                     <span className="w-3 h-3 rounded-full bg-[#ffbd2e] border border-[#dab12d] inline-block shrink-0" />
                     <span className="w-3 h-3 rounded-full bg-[#27c93f] border border-[#1a9c2b] inline-block shrink-0" />
                   </div>
-                  <span className="text-[10px] font-sans font-medium uppercase tracking-widest text-charcoal/50 dark:text-cream/50">
-                    {block.lang || "code"}
-                  </span>
+                  <div className="flex items-center gap-3">
+                    <span className="text-[11px] font-sans font-medium uppercase tracking-widest text-white/50 bg-white/5 px-2 py-0.5 rounded border border-white/10">
+                      {block.lang || "code"}
+                    </span>
+                    <CopyButton code={codeText} />
+                  </div>
                 </div>
-                <pre className="p-4 overflow-x-auto text-[#e6edf3] leading-relaxed font-mono bg-[#0d1117]">
+                <pre className="p-4 sm:p-5 overflow-x-auto text-[#e6edf3] leading-relaxed font-mono bg-[#0d1117]">
                   <code dangerouslySetInnerHTML={{ __html: highlightedCode }} />
                 </pre>
               </div>
             );
           }
+
           default:
             return null;
         }
       })}
+
+      {/* Lightbox Modal */}
+      {activeImage && (
+        <ImageLightbox
+          src={activeImage.url}
+          alt={activeImage.alt}
+          onClose={() => setActiveImage(null)}
+        />
+      )}
     </div>
   );
 }

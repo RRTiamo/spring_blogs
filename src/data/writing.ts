@@ -144,40 +144,81 @@ export const writingData: Post[] = [
     visibility: "public",
     cover: "/assets/writing-camera.png",
     description: "这是一篇专门用来测试自定义 Markdown 渲染引擎排版与样式的测试文章。涵盖了标题、列表、引用、代码块以及行内标记等元素。",
-    content: `# 自定义 Markdown 引擎测试
+    content: `# Markdown 渲染引擎测试与排版全集
 
-这是一个段落，包含 **粗体字**，*斜体字*，以及一个 [指向 GitHub](https://github.com) 的超链接。同时也可以包含 \`const test = "inline code"\` 这样的行内代码标记。
+这是一篇专门用来验证 Markdown 渲染引擎排版、调色与交互体验的测试文章。文章包含了行内样式 **粗体字**、*斜体字*、~~删除线~~、==文本高亮==、按键提示 <kbd>Cmd</kbd> + <kbd>K</kbd> 以及 [个人档案馆](https://github.com) 外部链接。
 
-这里测试一个无序列表：
-- 这是一个包含 **加粗文本** 的列表项
-- 这是第二个列表项，包含一个 [链接](https://google.com)
-- 这是一个简单的列表项
+---
 
-接下来是一个有序列表：
-1. 第一项：初始化个人生活档案馆
-2. 第二项：编写零依赖 Markdown 解析器
-3. 第三项：验证样式与系统性能
+## 一、Alert 与 Callout 提示卡片测试
 
-> 这里是一个引用块测试。
-> 胶片的温度在于银盐的颗粒感，而数字文字的温度，则在于那些被记录下来的微小日常。—— 生活档案馆
+> [!NOTE]
+> 这是一个 **NOTE** 提示块。常用于提供背景补充信息或相关说明。
 
-下面是代码块测试：
+> [!TIP]
+> 这是一个 **TIP** 技巧提示块。可以放置提高效率的小技巧或最佳实践。
+
+> [!IMPORTANT]
+> 这是一个 **IMPORTANT** 重要提示块。包含关键流程或容易遗漏的要点。
+
+> [!WARNING]
+> 这是一个 **WARNING** 警告提示块。提醒使用者注意可能的副作用或注意事项。
+
+> [!CAUTION]
+> 这是一个 **CAUTION** 危险/严禁提示块。高风险操作请务必仔细确认！
+
+---
+
+## 二、普通引用与任务列表
+
+> 胶片的温度在于银盐的颗粒感，而数字文字的温度，则在于那些被记录下来的微小日常。
+> —— *生活档案馆·Rrtiamo*
+
+这里是系统运维与架构任务清单：
+
+- [x] 重构 Markdown 渲染引擎，完美适配主题色
+- [x] 支持各种 Callout 警示框与图片 Lightbox 模态框
+- [x] 优化代码终端顶栏与一键复制功能
+- [ ] 增加更多图文混排视觉组件
+
+---
+
+## 三、数据表格展示
+
+| 功能特性 | 解析支持 | 样式匹配 | 交互扩展 |
+| :--- | :---: | :---: | ---: |
+| 标题与锚点 | 支持 H1-H6 | 暖色饰条点缀 | 悬停锚点图标 |
+| 提示框 (Callouts) | NOTE/TIP/WARNING等 | 5色主题适调 | 专属 Lucide 图标 |
+| 代码终端 | 高亮 (hljs) | Mac 三色卡片 | 一键复制代码 |
+| 高清大图 | 胶片外框说明 | 悬停遮罩 hover | 弹出 Lightbox 预览 |
+
+---
+
+## 四、代码终端与复制功能
 
 \`\`\`typescript
 interface Post {
   slug: string;
   title: string;
+  category: string;
   content: string;
 }
 
-const renderMarkdown = (post: Post) => {
-  console.log("Rendering post:", post.title);
-  return \`Rendering \${post.slug}...\`;
-};
+// 渲染流程示例函数
+export function renderPost(post: Post): string {
+  console.log(\`Rendering post: \${post.title}\`);
+  return \`<article class="markdown-body">\${post.content}</article>\`;
+}
 \`\`\`
 
-## 小结
+---
 
-如果所有区块如标题、列表、引用和代码块都排版美观、字体易读、且代码块显示为精致的深色终端样式，则说明渲染引擎表现符合预期。`
+## 五、胶片影像与 Lightbox 放大
+
+![生活档案馆·摄影记录](/assets/writing-camera.png)
+
+## 六、小结
+
+如果标题左侧带有暖色饰条、警示框色彩柔和且带有对应图标、代码块能够一键复制、图片点击可以弹出半透明全屏大图预览，则说明渲染引擎升级圆满完成！`
   }
 ];

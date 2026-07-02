@@ -1,6 +1,22 @@
 import type { NextConfig } from "next";
 
+const serverApiBaseUrl = (
+  process.env.SERVER_API_BASE_URL ??
+  (process.env.NODE_ENV === "production"
+    ? "http://127.0.0.1:8080/api"
+    : "http://localhost:8080/api")
+).replace(/\/+$/, "");
+
 const nextConfig: NextConfig = {
+  output: "standalone",
+  async rewrites() {
+    return [
+      {
+        source: "/api/:path*",
+        destination: `${serverApiBaseUrl}/:path*`,
+      },
+    ];
+  },
   images: {
     unoptimized: true,
     remotePatterns: [

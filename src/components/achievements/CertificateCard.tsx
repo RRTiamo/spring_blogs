@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useRef, useEffect } from "react";
-import Image from "next/image";
 import { GraduationCap, Briefcase, Trophy, Medal, Heart, BookOpen } from "lucide-react";
 import gsap from "gsap";
 

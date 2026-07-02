@@ -72,6 +72,8 @@ export default function Lightbox({ photo, onClose }: LightboxProps) {
                   className="max-w-full max-h-[50vh] object-contain rounded-xs border border-charcoal/5 dark:border-white/5"
                 />
               ) : (
+                // Preserve the original intrinsic ratio for arbitrary admin-managed lightbox media.
+                // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={photo.src}
                   alt={photo.title}

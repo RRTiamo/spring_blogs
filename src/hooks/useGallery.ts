@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from "react";
 import { GalleryPhoto, galleryData } from "@/data/gallery";
 import { getGalleryList } from "@/api/gallery";

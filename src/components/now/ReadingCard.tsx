@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import Image from "next/image";
 import { BookOpen } from "lucide-react";
 import gsap from "gsap";
 
@@ -126,10 +127,13 @@ export default function ReadingCard({ data }: { data?: ReadingData }) {
             {/* 书本封面 (Front Cover) */}
             <div className="absolute inset-0 bg-stone-900 border border-zinc-800 rounded-l flex flex-col justify-between overflow-hidden select-none transform translate-z-[1px]">
               {coverUrl ? (
-                <img
+                <Image
                   src={coverUrl}
                   alt={title}
-                  className="w-full h-full object-cover rounded-l animate-fade-in"
+                  fill
+                  sizes="72px"
+                  unoptimized
+                  className="object-cover rounded-l animate-fade-in"
                 />
               ) : (
                 <div className="absolute inset-0 p-2 flex flex-col justify-between h-full w-full">

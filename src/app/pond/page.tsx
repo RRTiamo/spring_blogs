@@ -7,7 +7,6 @@ import gsap from "gsap";
 import { 
   Fish, 
   Heart, 
-  Clock, 
   Lightbulb, 
   Sparkle, 
   Bug, 
@@ -164,7 +163,7 @@ const FeedbackCard = ({ fb, onLike, dbTypes }: { fb: PondFeedback; onLike: (id: 
     };
   }, []);
 
-  const handleLocalLike = (e: React.MouseEvent) => {
+  const handleLocalLike = () => {
     if (liked) return;
     setLiked(true);
     onLike(fb.id);
@@ -521,7 +520,6 @@ export default function PondPage() {
 
   useEffect(() => {
     fetchFeedbacks(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activePool]);
 
   // 水面心情融合流体背景 GSAP 缓动逻辑

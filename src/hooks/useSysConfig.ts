@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { getPublicConfig } from "@/api/config";
 
 export interface SysConfig {
   configKey: string;
@@ -10,11 +11,8 @@ export function useSysConfig() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("http://localhost:8080/api/config/public")
-      .then((res) => {
-        if (!res.ok) throw new Error("HTTP status " + res.status);
-        return res.json();
-      })
+    getPublicConfig()
+      .then((res) => res.data)
       .then((data) => {
         if (data.code === 200) {
           setConfigs(data.data || []);

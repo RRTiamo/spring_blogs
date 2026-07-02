@@ -28,10 +28,9 @@ const defaultMetas: AchievementMeta[] = [
 interface AchievementsPageClientProps {
   initialItems: Achievement[];
   initialMetas: AchievementMeta[];
-  configs: Record<string, string>;
 }
 
-export default function AchievementsPageClient({ initialItems, initialMetas, configs }: AchievementsPageClientProps) {
+export default function AchievementsPageClient({ initialItems, initialMetas }: AchievementsPageClientProps) {
   const [activeFilter, setActiveFilter] = useState<string>("all");
   const [activeAchievement, setActiveAchievement] = useState<Achievement | null>(null);
   const [items, setItems] = useState<Achievement[]>(initialItems);

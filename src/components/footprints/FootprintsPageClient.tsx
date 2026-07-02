@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useMemo } from "react";
 import Image from "next/image";
-import { Compass, Calendar, MapPin, Camera, BookOpen, X, Info } from "lucide-react";
+import { Compass, Calendar, MapPin, X, Info } from "lucide-react";
 import * as Icons from "lucide-react";
 import gsap from "gsap";
 import { DynamicIcon } from "@/icon/love";
@@ -67,7 +67,7 @@ const resolveMapCredentials = (str: string): string => {
         decrypted += String.fromCharCode(charCode);
       }
       return decrypted;
-    } catch (e) {
+    } catch {
       return str;
     }
   }
@@ -76,7 +76,7 @@ const resolveMapCredentials = (str: string): string => {
       const payload = str.substring(4);
       const shifted = decodeURIComponent(atob(payload));
       return shifted.split("").map((c) => String.fromCharCode(c.charCodeAt(0) - 3)).join("");
-    } catch (e) {
+    } catch {
       return str;
     }
   }

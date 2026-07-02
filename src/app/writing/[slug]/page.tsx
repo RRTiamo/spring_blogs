@@ -30,10 +30,21 @@ export default function PostPage() {
         const res = response.data;
         if (res && res.code === 200) {
           const item = res.data;
+          let formattedDate = new Date().toISOString().split("T")[0];
+          if (item.createTime) {
+            if (item.createTime.includes("T")) {
+              formattedDate = item.createTime.split("T")[0];
+            } else if (item.createTime.includes(" ")) {
+              formattedDate = item.createTime.split(" ")[0];
+            } else {
+              formattedDate = item.createTime;
+            }
+          }
+
           const formatted: Post = {
             slug: item.slug || `post-${item.id}`,
             title: item.title,
-            date: item.createTime ? item.createTime.split("T")[0] : new Date().toISOString().split("T")[0],
+            date: formattedDate,
             category: item.category || "Thoughts",
             mood: item.mood || "quiet",
             visibility: (item.visibility as any) || "public",
@@ -46,6 +57,7 @@ export default function PostPage() {
           throw new Error("Post not found in API");
         }
       } catch (err) {
+        console.error("Detail page fetch error detail:", err);
         console.warn("Detail page: API unavailable, using local writingData static fallback.", err);
         const local = writingData.find((p) => p.slug === slug);
         setPost(local || null);
@@ -56,6 +68,15 @@ export default function PostPage() {
     fetchPost();
   }, [slug]);
 
+  // 种子为 42 的伪随机发生器 (Linear Congruential Generator)
+  const seededRandom = (seed: number) => {
+    let s = seed;
+    return () => {
+      s = (s * 9301 + 49297) % 233280;
+      return s / 233280;
+    };
+  };
+
   // 解析并生成大纲 (TOC)
   useEffect(() => {
     if (!post || (post.visibility === "private" && !unlocked)) return;
@@ -65,7 +86,7 @@ export default function PostPage() {
       const items: { id: string; text: string; level: number }[] = [];
       headings.forEach((heading) => {
         const id = heading.id;
-        if (id && id.startsWith("heading-")) {
+        if (id) {
           const text = heading.textContent || "";
           const level = parseInt(heading.tagName.substring(1), 10);
           items.push({ id, text, level });
@@ -106,11 +127,17 @@ export default function PostPage() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [toc]);
 
-  // 挑选当前文章之外的 3 篇推荐文章
+  // 使用 seed = 42 进行伪随机算法推荐 3 篇文章
   useEffect(() => {
     if (!post) return;
     const filtered = writingData.filter((p) => p.slug !== slug);
-    setRecommendations(filtered.slice(0, 3));
+    const rng = seededRandom(42);
+    const shuffled = [...filtered];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(rng() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    setRecommendations(shuffled.slice(0, 3));
   }, [post, slug]);
   
   if (loading) {

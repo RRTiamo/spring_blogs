@@ -122,6 +122,8 @@ export default function GalleryCard({ photo, index, onClick }: GalleryCardProps)
             {/* 极轻微的暗角与网格纹理叠加层 */}
             <div className="absolute inset-0 bg-radial-vignette opacity-15 pointer-events-none z-10 transition-opacity group-hover:opacity-5" />
 
+            {/* Admin-managed images have unknown intrinsic dimensions and may use arbitrary storage origins. */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={photo.src}
               alt={photo.title}
