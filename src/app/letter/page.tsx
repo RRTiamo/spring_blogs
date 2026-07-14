@@ -37,7 +37,6 @@ export default function LetterPage() {
             content: item.content || "",
             images: item.images || ""
           }));
-          console.log("[岁月信箱] 动态加载的未来信札列表:", list);
           setLetters(list);
         }
       } catch (err) {

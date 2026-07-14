@@ -3,13 +3,13 @@ import { Inter, Cormorant_Garamond, Playfair_Display, Space_Grotesk, Space_Mono,
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import FloatingFooterPeekers from "@/components/ui/FloatingFooterPeekers";
 import SmoothScroll from "@/components/ui/SmoothScroll";
 import StyleConsole from "@/components/ui/StyleConsole";
 import BackToTop from "@/components/ui/BackToTop";
-import TapeStation from "@/components/ui/TapeStation";
+import ArchivePlayer from "@/components/ui/ArchivePlayer";
 import ThemeApplier from "@/components/ui/ThemeApplier";
-import { fetchPublicConfigForServer } from "@/api/config";
+import { getPublicConfigSnapshot } from "@/api/config";
+import { SysConfigProvider } from "@/hooks/useSysConfig";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -65,21 +65,13 @@ const maShanZheng = Ma_Shan_Zheng({
 export async function generateMetadata(): Promise<Metadata> {
   let title = "春风不解别离 | 个人生活档案馆";
   let faviconUrl = "/icon.png";
-  try {
-    const data = await fetchPublicConfigForServer({ next: { revalidate: 10 } });
-    if (data.code === 200 && Array.isArray(data.data)) {
-      const titleItem = data.data.find((c: any) => c.configKey === "site.title.default");
-      if (titleItem?.configValue) {
-        title = titleItem.configValue;
-      }
-      const favItem = data.data.find((c: any) => c.configKey === "site.favicon.url");
-      if (favItem?.configValue) {
-        faviconUrl = favItem.configValue;
-      }
+  const configs = await getPublicConfigSnapshot();
+  const titleItem = configs.find((config) => config.configKey === "site.title.default");
+  if (titleItem?.configValue) title = titleItem.configValue;
+  const faviconItem = configs.find((config) => config.configKey === "site.favicon.url");
+  if (faviconItem?.configValue) {
+    faviconUrl = faviconItem.configValue;
     }
-  } catch (e) {
-    console.warn("Failed to fetch root metadata:", e);
-  }
 
   return {
     title,
@@ -90,17 +82,20 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const configs = await getPublicConfigSnapshot();
+
   return (
     <html
       lang="zh"
       className={`${inter.variable} ${cormorant.variable} ${playfair.variable} ${spaceGrotesk.variable} ${spaceMono.variable} ${jost.variable} ${notoSerifSC.variable} ${maShanZheng.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col text-charcoal bg-transparent">
+        <SysConfigProvider initialConfigs={configs}>
         <ThemeApplier />
         {/* 1. 全局底色层 (z-0) */}
         <div className="fixed inset-0 z-0 bg-cream pointer-events-none" />
@@ -129,17 +124,15 @@ export default function RootLayout({
           </SmoothScroll>
         </div>
 
-        {/* 5. 全站底部趴窗装饰，接近 footer 时停靠到 footer 顶部 */}
-        <FloatingFooterPeekers />
-
         {/* 6. 悬浮的视觉控制中心 */}
         <StyleConsole />
 
         {/* 7. 全局回到顶部按钮 */}
         <BackToTop />
 
-        {/* 8. 治愈系磁带播放器 */}
-        <TapeStation />
+        {/* 8. 沉浸式音乐播放器 */}
+        <ArchivePlayer />
+        </SysConfigProvider>
       </body>
     </html>
   );

@@ -50,25 +50,6 @@ export default function LetterModal({
   const isPast = letter ? parseTargetDate(letter.targetDate).getTime() < new Date().getTime() : false;
   const canRead = isUnlocked || isPast;
 
-  useEffect(() => {
-    if (letter) {
-      console.log(
-        "[岁月信箱] 弹窗属性 - ID:",
-        letter.id,
-        "canRead:",
-        canRead,
-        "isPast:",
-        isPast,
-        "isUnlocked:",
-        isUnlocked,
-        "bypassCode:",
-        letter.bypassCode,
-        "content字数:",
-        letter.content?.length
-      );
-    }
-  }, [letter, canRead, isPast, isUnlocked]);
-
   // 根据信件 ID 匹配回忆照片堆
   const is2027 = letter ? letter.id.includes("2027") : false;
   const customImages = letter?.images ? letter.images.split(",").map(s => s.trim()).filter(Boolean) : [];

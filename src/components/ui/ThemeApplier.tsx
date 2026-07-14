@@ -1,19 +1,16 @@
 "use client";
 
 import { useEffect } from "react";
-import { getPublicConfig } from "@/api/config";
+import { useSysConfig } from "@/hooks/useSysConfig";
 
 export default function ThemeApplier() {
-  useEffect(() => {
-    async function fetchAndApplyTheme() {
-      try {
-        const res = await getPublicConfig();
-        const data = res.data;
-        if (data.code !== 200 || !data.data) return;
+  const { configs } = useSysConfig();
 
-        const list = data.data as any[];
+  useEffect(() => {
+    function applyTheme() {
+      try {
         const configMap: Record<string, string> = {};
-        list.forEach((item) => {
+        configs.forEach((item) => {
           configMap[item.configKey] = item.configValue;
         });
 
@@ -163,13 +160,13 @@ export default function ThemeApplier() {
         }
         styleElement.innerHTML = css;
 
-      } catch (err) {
-        console.warn("ThemeApplier dynamic loading failed:", err);
+      } catch (error) {
+        console.warn("主题配置格式无效:", error instanceof Error ? error.message : "unknown error");
       }
     }
 
-    fetchAndApplyTheme();
-  }, []);
+    applyTheme();
+  }, [configs]);
 
   return null;
 }

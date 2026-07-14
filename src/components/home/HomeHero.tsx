@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowDown, Camera, Feather, PenLine } from "lucide-react";
@@ -24,17 +25,21 @@ export default function HomeHero({
   welcomeSubtitle,
   logoText
 }: HomeHeroProps) {
+  const [mediaFailed, setMediaFailed] = useState(false);
+
   return (
     <section className="relative isolate min-h-[100dvh] overflow-hidden bg-charcoal px-4 pt-24 text-cream sm:px-6 lg:px-8">
       <div className="absolute inset-0">
-        {heroBgUrl ? (
+        {heroBgUrl && !mediaFailed ? (
           heroBgUrl.match(/\.(mp4|webm|ogg|mov|m4v)($|\?)/i) ? (
             <video
               src={heroBgUrl}
+              poster="/bg-image.png"
               autoPlay
               loop
               muted
               playsInline
+              onError={() => setMediaFailed(true)}
               className="absolute inset-0 h-full w-full object-cover object-[62%_center] brightness-[0.82] saturate-[1.14] dark:brightness-[0.7]"
             />
           ) : (
@@ -44,6 +49,7 @@ export default function HomeHero({
               fill
               priority
               sizes="100vw"
+              onError={() => setMediaFailed(true)}
               className="object-cover object-[62%_center] brightness-[0.82] saturate-[1.14] dark:brightness-[0.7]"
             />
           )

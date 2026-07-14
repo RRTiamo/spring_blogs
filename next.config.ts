@@ -8,9 +8,18 @@ const serverApiBaseUrl = (
 ).replace(/\/+$/, "");
 
 const nextConfig: NextConfig = {
+  distDir: process.env.NEXT_DIST_DIR || ".next",
   output: "standalone",
   async rewrites() {
     return [
+      {
+        source: "/api/music/:path*",
+        destination: "/api/music/:path*",
+      },
+      {
+        source: "/api/music",
+        destination: "/api/music",
+      },
       {
         source: "/api/:path*",
         destination: `${serverApiBaseUrl}/:path*`,

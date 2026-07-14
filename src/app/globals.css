@@ -388,6 +388,8 @@ html.lenis, html.lenis body {
      transition here so the scroll-scrubbed cross-dissolve is not double-eased. */
 }
 
+
+
 .footer-peekers-floating-image {
   position: relative;
   z-index: 1;
@@ -580,4 +582,17 @@ nextjs-portal, #__next-prerender-indicator {
   display: none !important;
 }
 
+/* 黑胶唱片 360 度平滑旋转动画 */
+@keyframes spin-linear {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-slow {
+  animation: spin-linear 20s linear infinite;
+}
 

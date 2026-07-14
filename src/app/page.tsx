@@ -3,7 +3,8 @@ import { galleryData } from "@/data/gallery";
 import { writingData, Post } from "@/data/writing";
 import { getBlogsList } from "@/api/blogs";
 import { getGalleryList } from "@/api/gallery";
-import { getPublicConfig } from "@/api/config";
+import { getPublicConfigSnapshot } from "@/api/config";
+import { reportUnexpectedFallback } from "@/lib/fallback-log";
  
 async function getFeaturedPosts(): Promise<Post[]> {
   try {
@@ -23,7 +24,7 @@ async function getFeaturedPosts(): Promise<Post[]> {
       })).slice(0, 3);
     }
   } catch (err) {
-    console.warn("Home page: API unavailable, using local writingData static fallback.", err);
+    reportUnexpectedFallback("home-posts", "首页文章使用本地数据", err);
   }
   return writingData.slice(0, 3);
 }
@@ -48,33 +49,23 @@ async function getFeaturedPhotos(): Promise<any[]> {
       })).slice(0, 4);
     }
   } catch (err) {
-    console.warn("Home page gallery: API unavailable, using local galleryData static fallback.", err);
+    reportUnexpectedFallback("home-gallery", "首页相册使用本地数据", err);
   }
   return galleryData.slice(0, 4);
 }
  
 async function getPublicConfigs(): Promise<Record<string, string>> {
-  try {
-    const res = await getPublicConfig();
-    const data = res.data;
-    if (data && data.code === 200 && Array.isArray(data.data)) {
-      const configMap: Record<string, string> = {};
-      data.data.forEach((item: any) => {
-        configMap[item.configKey] = item.configValue;
-      });
-      return configMap;
-    }
-  } catch (err) {
-    console.warn("Home page configs: API unavailable, using empty config fallback.", err);
-  }
-  return {};
+  const configs = await getPublicConfigSnapshot();
+  return Object.fromEntries(configs.map((item) => [item.configKey, item.configValue]));
 }
 
  
 export default async function HomePage() {
-  const featuredPosts = await getFeaturedPosts();
-  const featuredPhotos = await getFeaturedPhotos();
-  const configs = await getPublicConfigs();
+  const [featuredPosts, featuredPhotos, configs] = await Promise.all([
+    getFeaturedPosts(),
+    getFeaturedPhotos(),
+    getPublicConfigs(),
+  ]);
   return (
     <HomePageClient
       featuredPosts={featuredPosts}

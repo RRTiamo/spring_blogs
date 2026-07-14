@@ -55,7 +55,7 @@ export default function BackToTop() {
   return (
     <button
       onClick={handleLaunch}
-      className={`fixed right-6 bottom-20 z-[1000] flex h-12 w-12 items-center justify-center rounded-full border border-charcoal/10 dark:border-white/10 bg-cream/90 dark:bg-charcoal/90 text-charcoal shadow-lg backdrop-blur-md transition-all duration-300 cursor-pointer pointer-events-auto hover:border-gold hover:text-gold hover:scale-105 active:scale-95 group ${
+      className={`fixed right-5 bottom-32 z-60 flex h-11 w-11 items-center justify-center rounded-full border border-charcoal/10 dark:border-white/10 bg-cream/90 dark:bg-charcoal/90 text-charcoal shadow-lg backdrop-blur-md transition-all duration-300 cursor-pointer pointer-events-auto hover:border-gold hover:text-gold hover:scale-105 active:scale-95 group sm:right-6 sm:bottom-36 ${
         isVisible ? "opacity-100 translate-y-0 scale-100" : "opacity-0 translate-y-8 scale-75 pointer-events-none"
       }`}
       aria-label="返回顶部"
